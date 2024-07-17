@@ -1,0 +1,133 @@
+---
+networks:
+  public:
+
+volumes:
+  acme:
+
+services:
+  traefik:
+    image: traefik:latest
+    hostname: traefik
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--global.sendAnonymousUsage=false"
+      - "--global.checkNewVersion=false"
+      # ---------------------------------- ACME --------------------------------------------
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=${MY_PROVIDER}"
+      - "--certificatesresolvers.letsencrypt.acme.email=myemail@mail.com"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.disablePropagationCheck=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # -------------------------------- ENTRYPOINT -----------------------------------------
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+      - "--entrypoints.websecure.http.tls.certResolver=letsencrypt"
+      # - "--entrypoints.websecure.http.tls.domains[0].main=${MY_DOMAIN}"
+      # - "--entrypoints.websecure.http.tls.domains[0].sans=*.${MY_DOMAIN}"
+      # -------------------------------- PROXY -----------------------------------------
+      - "--entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7"
+      - "--entryPoints.web.proxyProtocol.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7"
+      - "--entryPoints.websecure.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7"
+      - "--entryPoints.websecure.proxyProtocol.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7"
+      - "--entryPoints.web.forwardedHeaders.insecure=false"
+      - "--entryPoints.web.proxyProtocol.insecure=false"
+      - "--entryPoints.websecure.forwardedHeaders.insecure=false"
+      - "--entryPoints.websecure.proxyProtocol.insecure=false"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.docker.network=traefik_public
+      - traefik.http.routers.api.tls=true
+      - traefik.http.routers.api.entryPoints=websecure
+      - traefik.http.routers.api.service=api@internal
+      - traefik.http.routers.api.tls.certresolver=letsencrypt
+      - traefik.http.routers.api.middlewares=authelia@docker
+    environment:
+      DUCKDNS_TOKEN: "${DUCKDNS_TOKEN}"
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - acme:/letsencrypt
+    networks:
+      - public
+      - private
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    hostname: watchtower
+    restart: unless-stopped
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=false
+    environment:
+      WATCHTOWER_CLEANUP: true
+      WATCHTOWER_LABEL_ENABLE: true
+      WATCHTOWER_RUN_ONCE: true
+      WATCHTOWER_HTTP_API_METRICS: true
+      WATCHTOWER_ROLLING_RESTART: true
+      WATCHTOWER_TIMEOUT: 30s
+      WATCHTOWER_SCHEDULE: "0 8 * * *"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.docker/config.json:/config.json
+      - /etc/localtime:/etc/localtime:ro
+
+  authelia_generate_secrets:
+    build: generate_secrets
+    volumes:
+      - ./config/secrets:/secrets
+
+  authelia_redis:
+    image: redis
+    restart: unless-stopped
+    container_name: authelia_redis
+    hostname: authelia_redis
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - redis
+
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    hostname: authelia
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.docker.network=public
+      - traefik.http.routers.authelia.entryPoints=websecure
+      - traefik.http.routers.authelia.tls.certresolver=letsencrypt
+      - traefik.http.routers.authelia.rule=Host(`auth.${MY_DOMAIN}`)
+      - traefik.http.middlewares.authelia.forwardAuth.address=http://authelia:9091/api/authz/forward-auth
+      - traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader=true
+      - traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Email,Remote-Name
+      - traefik.http.services.authelia.loadbalancer.server.port=9091
+    depends_on:
+      authelia_generate_secrets:
+        condition: service_completed_successfully
+    user: 1001:1001
+    volumes:
+      - ./config:/config
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Amsterdam
+      X_AUTHELIA_CONFIG_FILTERS: template
+      MY_DOMAIN: ${MY_DOMAIN}
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/secrets/JWT_SECRET
+      AUTHELIA_SESSION_SECRET_FILE: /config/secrets/SESSION_SECRET
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/STORAGE_ENCRYPTION_KEY
+    networks:
+      - public
+      - redis
