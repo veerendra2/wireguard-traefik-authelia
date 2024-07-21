@@ -1,5 +1,5 @@
 # wireguard + traefik + authelia
-Docker Compose stack to deploy wireguard VPN server with [wg-easy](https://github.com/wg-easy/wg-easy), [traefik](https://github.com/traefik/traefik) as reverse proxy to access wg-easy UI and [authelia](https://github.com/authelia/authelia) for authentication.
+Docker Compose stack to deploy wireguard VPN server([wg-easy](https://github.com/wg-easy/wg-easy)), [traefik](https://github.com/traefik/traefik) as reverse proxy to access `wg-easy` UI and [authelia](https://github.com/authelia/authelia) for authentication.
 
 ## Deploy
 - `docker` and `docker-compose` should be installed
@@ -27,7 +27,7 @@ Docker Compose stack to deploy wireguard VPN server with [wg-easy](https://githu
 
     $ docker-compose up -d
     ```
-- Once stack is up and running. Go to your `${MY_DOMAIN}` and log in with your passoword and click register like below
+- Once stack is up and running. Go to your domain(`${MY_DOMAIN}`) and log in with your passoword and click register like below
    
    <img src="https://i.ibb.co/P4SMnb9/Screenshot-2024-07-21-at-17-00-46.png" alt="drawing" width="200"/>
 - Get 2fa first code in `config/notification.txt`
