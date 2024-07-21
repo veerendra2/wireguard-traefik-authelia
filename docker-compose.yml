@@ -29,8 +29,8 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.websecure.http.tls=true"
-      - "--entrypoints.websecure.http.tls.certResolver=letsencrypt"
+      #- "--entrypoints.websecure.http.tls=true"
+      #- "--entrypoints.websecure.http.tls.certResolver=letsencrypt"
       # - "--entrypoints.websecure.http.tls.domains[0].main=${MY_DOMAIN}"
       # - "--entrypoints.websecure.http.tls.domains[0].sans=*.${MY_DOMAIN}"
       # -------------------------------- PROXY -----------------------------------------

@@ -6,14 +6,21 @@ log:
   level: 'debug'
 
 totp:
+  disable: false
   issuer: 'authelia.com'
 
 authentication_backend:
   file:
     path: '/config/users_database.yml'
 
+# https://www.authelia.com/configuration/security/access-control/
 access_control:
-  default_policy: 'one_factor'
+  default_policy: deny
+  rules:
+    - domain: 'auth.{{ env "MY_DOMAIN" }}'
+      policy: bypass
+    - domain: 'wg.{{ env "MY_DOMAIN" }}'
+      policy: two_factor
 
 session:
   cookies:
