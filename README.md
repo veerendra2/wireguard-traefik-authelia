@@ -40,7 +40,8 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
     </p>
 
 - Retrieve the first 2FA code from `config/notification.txt`.
-    **NOTE:** This `config/notification.txt` is automatically created by Authelia. For example:
+
+  **NOTE:** This `config/notification.txt` is automatically created by Authelia. For example:
     ```bash
     cat config/notification.txt
     Date: 2024-07-21 14:55:11.30894104 +0000 UTC m=+43.154509640
