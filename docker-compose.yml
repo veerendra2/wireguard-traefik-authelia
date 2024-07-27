@@ -1,9 +1,18 @@
 ---
 networks:
   public:
+  redis:
+  wg_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.8.2.0/24
+          gateway: 10.8.2.1
+          ip_range: 10.8.2.0/24
 
 volumes:
   acme:
+  etc_wireguard:
 
 services:
   traefik:
@@ -12,9 +21,11 @@ services:
     container_name: traefik
     restart: unless-stopped
     command:
-      - "--log.level=DEBUG"
+      - "--log.level=INFO"
       - "--api.insecure=false"
+      - "--api.dashboard=false"
       - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
       - "--global.sendAnonymousUsage=false"
       - "--global.checkNewVersion=false"
       # ---------------------------------- ACME --------------------------------------------
@@ -45,7 +56,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
-      - traefik.docker.network=public
+      - traefik.docker.network=wireguard-traefik-authelia_public
       - traefik.http.routers.api.tls=true
       - traefik.http.routers.api.entryPoints=websecure
       - traefik.http.routers.api.service=api@internal
@@ -59,10 +70,10 @@ services:
       - 443:443/tcp
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
       - acme:/letsencrypt
     networks:
       - public
-      - private
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -107,7 +118,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
-      - traefik.docker.network=public
+      - traefik.docker.network=wireguard-traefik-authelia_public
       - traefik.http.routers.authelia.entryPoints=websecure
       - traefik.http.routers.authelia.tls.certresolver=letsencrypt
       - traefik.http.routers.authelia.rule=Host(`auth.${MY_DOMAIN}`)
@@ -121,6 +132,7 @@ services:
     user: 1001:1001
     volumes:
       - ./config:/config
+      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     environment:
       TZ: Europe/Amsterdam
@@ -132,3 +144,47 @@ services:
     networks:
       - public
       - redis
+
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:latest
+    container_name: wg-easy
+    hostname: wg-easy
+    restart: unless-stopped
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.docker.network=wireguard-traefik-authelia_public
+      - traefik.http.routers.wg-easy.tls=true
+      - traefik.http.routers.wg-easy.entrypoints=websecure
+      - traefik.http.routers.wg-easy.tls.certresolver=letsencrypt
+      - traefik.http.routers.wg-easy.rule=Host(`wg.${MY_DOMAIN}`)
+      - traefik.http.routers.wg-easy.middlewares=authelia@docker
+      - traefik.http.services.wg-easy.loadbalancer.server.port=51821
+    depends_on:
+      - authelia
+      - traefik
+    environment:
+      LANG: en
+      WG_HOST: wg.${MY_DOMAIN}
+      WG_DEFAULT_DNS: 1.1.1.1,1.0.0.1
+      WG_DEFAULT_ADDRESS: 10.8.0.x
+      WG_PORT: 51820
+      WG_PERSISTENT_KEEPALIVE: 25
+      WG_ALLOWED_IPS: "0.0.0.0/0,::/0"
+      UI_TRAFFIC_STATS: true
+      UI_CHART_TYPE: 2
+    volumes:
+      - etc_wireguard:/etc/wireguard
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "51820:51820/udp"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      wg_network:
+        ipv4_address: 10.8.2.8
+      public:
