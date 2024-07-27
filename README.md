@@ -21,7 +21,7 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
     ```yaml
     users:
       your-user-name:
-        disabled: true
+        disabled: false
         displayname: "User Name"
         password: "<generated-password-hash>"
         email: "root@localhost"
