@@ -21,7 +21,7 @@ services:
     container_name: traefik
     restart: unless-stopped
     command:
-      - "--log.level=DEBUG"
+      - "--log.level=INFO"
       - "--api.insecure=false"
       - "--api.dashboard=false"
       - "--providers.docker=true"
@@ -30,6 +30,7 @@ services:
       - "--global.checkNewVersion=false"
       # ---------------------------------- ACME --------------------------------------------
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=3"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=${MY_PROVIDER}"
       - "--certificatesresolvers.letsencrypt.acme.email=myemail@mail.com"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.disablePropagationCheck=true"
