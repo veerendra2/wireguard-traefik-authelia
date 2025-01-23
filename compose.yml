@@ -168,7 +168,7 @@ services:
     image: ghcr.io/wg-easy/wg-easy:latest
     container_name: wg-easy
     hostname: wg-easy
-    restart: unless-stopped
+    restart: on-failure:3
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
@@ -193,8 +193,8 @@ services:
       UI_TRAFFIC_STATS: true
       UI_CHART_TYPE: 2
     volumes:
-      - wireguard_data:/etc/wireguard
       - /etc/localtime:/etc/localtime:ro
+      - wireguard_data:/etc/wireguard
     ports:
       - "51820:51820/udp"
     cap_add:
