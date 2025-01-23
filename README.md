@@ -30,8 +30,8 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
 
   ```bash
   export MY_PROVIDER="duckdns"
-  export MY_DOMAIN=""
-  export DUCKDNS_TOKEN=""
+  export MY_DOMAIN="mydomain.duckdns.org"
+  export DUCKDNS_TOKEN="MYTOKEN"
   export PUID=$(id -u)
   export PGID=$(id -g)
 
