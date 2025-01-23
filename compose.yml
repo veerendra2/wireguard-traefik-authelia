@@ -85,48 +85,14 @@ services:
     networks:
       - public_network
 
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
-    hostname: watchtower
-    restart: on-failure:3
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
-      - traefik.enable=false
-    user: ${PUID?error}:${PGID?error}
-    group_add:
-      - 999
-    environment:
-      WATCHTOWER_CLEANUP: true
-      WATCHTOWER_LABEL_ENABLE: true
-      WATCHTOWER_RUN_ONCE: true
-      WATCHTOWER_HTTP_API_METRICS: true
-      WATCHTOWER_ROLLING_RESTART: true
-      WATCHTOWER_TIMEOUT: 30s
-      WATCHTOWER_SCHEDULE: "0 8 * * *"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/localtime:/etc/localtime:ro
-
   authelia-secrets-generate:
     image: veerendra2/secrets-generator:latest
-    container_name: authelia_secrets_generator
+    container_name: authelia-secrets-generate
     environment:
       PUID: ${PUID:?error}
       PGID: ${PGID:?error}
     volumes:
       - authelia_data:/secrets
-
-  redis:
-    image: redis
-    container_name: redis
-    hostname: redis
-    restart: on-failure:3
-    labels:
-      - com.centurylinklabs.watchtower.enable=true
-    user: ${PUID:?error}:${PGID:?error}
-    networks:
-      - redis_network
 
   authelia:
     image: authelia/authelia
@@ -158,6 +124,7 @@ services:
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/STORAGE_ENCRYPTION_KEY
     volumes:
       - ./config:/config
+      - authelia_data:/config
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     networks:
@@ -207,3 +174,37 @@ services:
       wireguard_network:
         ipv4_address: 10.8.2.8
       public_network:
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    hostname: watchtower
+    restart: on-failure:3
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=false
+    user: ${PUID?error}:${PGID?error}
+    group_add:
+      - 999
+    environment:
+      WATCHTOWER_CLEANUP: true
+      WATCHTOWER_LABEL_ENABLE: true
+      WATCHTOWER_RUN_ONCE: true
+      WATCHTOWER_HTTP_API_METRICS: true
+      WATCHTOWER_ROLLING_RESTART: true
+      WATCHTOWER_TIMEOUT: 30s
+      WATCHTOWER_SCHEDULE: "0 8 * * *"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+
+  redis:
+    image: redis
+    container_name: redis
+    hostname: redis
+    restart: on-failure:3
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    user: ${PUID:?error}:${PGID:?error}
+    networks:
+      - redis_network
