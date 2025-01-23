@@ -7,6 +7,8 @@ networks:
     name: public_network
   redis_network:
     name: redis_network
+  watchtower:
+    name: watchtower_network
   wireguard_network:
     name: wireguard_network
     driver: bridge
@@ -95,7 +97,7 @@ services:
       - authelia_data:/secrets
 
   authelia:
-    image: authelia/authelia
+    image: authelia/authelia:latest
     container_name: authelia
     hostname: authelia
     restart: on-failure:3
@@ -197,9 +199,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
+    networks:
+      - watchtower_network
 
   redis:
-    image: redis
+    image: redis:latest
     container_name: redis
     hostname: redis
     restart: on-failure:3

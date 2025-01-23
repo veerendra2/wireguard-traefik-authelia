@@ -11,18 +11,18 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
 ## Deploy
 
 - Ensure Docker and Docker Compose plugin are installed.
-- Generate password hash for users in Authelia:
+- Generate password hash for users in Authelia
   ```bash
   docker run --rm authelia/authelia:latest \
   authelia crypto hash generate argon2 \
   --password 'my-password'
   ```
-- Update the Authelia users configuration in [./compose.config.yml#L69](./compose.config.yml#L69):
+- Update the Authelia users configuration in [./config/users_database.yml](./config/users_database.yml):
   ```yaml
   users:
     your-user-name:
       disabled: false
-      displayname: "User Name"
+      displayname: "Your Disaplay Name"
       password: "<generated-password-hash>"
       email: "root@localhost"
   ```
