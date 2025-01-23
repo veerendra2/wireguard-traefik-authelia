@@ -1,8 +1,14 @@
 ---
+include:
+  - compose.config.yml
+
 networks:
-  public:
-  redis:
-  wg_network:
+  public_network:
+    name: public_network
+  redis_network:
+    name: redis_network
+  wireguard_network:
+    name: wireguard_network
     driver: bridge
     ipam:
       config:
@@ -11,15 +17,19 @@ networks:
           ip_range: 10.8.2.0/24
 
 volumes:
-  acme:
-  etc_wireguard:
+  traefik_data:
+    name: traefik_data
+  wireguard_data:
+    name: wireguard_data
+  authelia_data:
+    name: authelia_data
 
 services:
   traefik:
     image: traefik:latest
     hostname: traefik
     container_name: traefik
-    restart: unless-stopped
+    restart: on-failure:3
     command:
       - "--log.level=INFO"
       - "--api.insecure=false"
@@ -57,13 +67,12 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
-      - traefik.docker.network=wireguard-traefik-authelia_public
+      - traefik.docker.network=public_network
       - traefik.http.routers.api.tls=true
       - traefik.http.routers.api.entryPoints=websecure
       - traefik.http.routers.api.service=api@internal
       - traefik.http.routers.api.tls.certresolver=letsencrypt
       - traefik.http.routers.api.rule=Host(`${MY_DOMAIN}`)
-      - traefik.http.routers.api.middlewares=authelia@docker
     environment:
       DUCKDNS_TOKEN: "${DUCKDNS_TOKEN}"
     ports:
@@ -72,15 +81,15 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
-      - acme:/letsencrypt
+      - traefik_data:/letsencrypt
     networks:
-      - public
+      - public_network
 
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
     hostname: watchtower
-    restart: unless-stopped
+    restart: on-failure:3
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=false
@@ -94,28 +103,32 @@ services:
       WATCHTOWER_SCHEDULE: "0 8 * * *"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /root/.docker/config.json:/config.json
       - /etc/localtime:/etc/localtime:ro
 
-  authelia_generate_secrets:
-    build: generate_secrets
+  authelia-secrets-generate:
+    image: veerendra2/secrets-generator:latest
+    container_name: authelia_secrets_generator
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
     volumes:
-      - ./config/secrets:/secrets
+      - authelia_data:/secrets
 
-  authelia_redis:
+  redis:
     image: redis
-    restart: unless-stopped
-    container_name: authelia_redis
-    hostname: authelia_redis
+    container_name: redis
+    hostname: redis
+    restart: on-failure:3
     labels:
       - com.centurylinklabs.watchtower.enable=true
     networks:
-      - redis
+      - redis_network
 
   authelia:
     image: authelia/authelia
     container_name: authelia
     hostname: authelia
+    restart: on-failure:3
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
@@ -126,22 +139,23 @@ services:
       - traefik.http.middlewares.authelia.forwardAuth.address=http://authelia:9091/api/authz/forward-auth
       - traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader=true
       - traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Email,Remote-Name
+      - traefik.http.routers.authelia.middlewares=authelia@docker
       - traefik.http.services.authelia.loadbalancer.server.port=9091
     depends_on:
-      authelia_generate_secrets:
+      authelia-secrets-generate:
         condition: service_completed_successfully
-    user: 1001:1001
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      X_AUTHELIA_CONFIG_FILTERS: template
+      MY_DOMAIN: ${MY_DOMAIN}
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/JWT_SECRET
+      AUTHELIA_SESSION_SECRET_FILE: /config/SESSION_SECRET
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/STORAGE_ENCRYPTION_KEY
     volumes:
       - ./config:/config
       - /etc/localtime:/etc/localtime:ro
-    restart: unless-stopped
-    environment:
-      TZ: Europe/Amsterdam
-      X_AUTHELIA_CONFIG_FILTERS: template
-      MY_DOMAIN: ${MY_DOMAIN}
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/secrets/JWT_SECRET
-      AUTHELIA_SESSION_SECRET_FILE: /config/secrets/SESSION_SECRET
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/STORAGE_ENCRYPTION_KEY
+      - /etc/timezone:/etc/timezone:ro
     networks:
       - public
       - redis
@@ -175,7 +189,7 @@ services:
       UI_TRAFFIC_STATS: true
       UI_CHART_TYPE: 2
     volumes:
-      - etc_wireguard:/etc/wireguard
+      - wireguard_data:/etc/wireguard
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "51820:51820/udp"
@@ -186,6 +200,6 @@ services:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
     networks:
-      wg_network:
+      wireguard_network:
         ipv4_address: 10.8.2.8
-      public:
+      public_network:
