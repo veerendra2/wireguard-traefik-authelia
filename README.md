@@ -43,6 +43,11 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
     <img src="https://i.ibb.co/P4SMnb9/Screenshot-2024-07-21-at-17-00-46.png" alt="drawing" width="200"/>
     </p>
 
+- After login, click "ADD" and it ask for OTP like below screenshot
+    <p align="center">
+      <img src="https://i.ibb.co/T8fXGLY/1.png" alt="drawing" width="200"/>
+    </p>
+
 - Retrieve the first 2FA code by running `config/notification.txt`.
 
   **NOTE:** This `config/notification.txt` is automatically created by Authelia. For example:
@@ -67,3 +72,8 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
 
   The following link can be used to revoke the code (this is a logged event): XXXX
   ```
+
+- Register OTP
+    <p align="center">
+      <img src="https://i.ibb.co/rmxgzpk/3.png" alt="drawing" width="200"/>
+    </p>

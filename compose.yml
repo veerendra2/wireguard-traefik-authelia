@@ -4,8 +4,6 @@ networks:
     name: public_network
   redis_network:
     name: redis_network
-  watchtower_network:
-    name: watchtower_network
   wireguard_network:
     name: wireguard_network
     driver: bridge
@@ -196,8 +194,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
-    networks:
-      - watchtower_network
 
   redis:
     image: redis:latest
