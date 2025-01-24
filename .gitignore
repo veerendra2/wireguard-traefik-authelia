@@ -1,0 +1,3 @@
+config/*
+!config/configuration.yml
+!config/users_database.yml

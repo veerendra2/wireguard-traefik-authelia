@@ -31,7 +31,7 @@ session:
       inactivity: "5 minutes"
 
   redis:
-    host: "authelia_redis"
+    host: "redis"
     port: 6379
 
 regulation:

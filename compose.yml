@@ -18,6 +18,8 @@ volumes:
     name: traefik_data
   wireguard_data:
     name: wireguard_data
+  authelia_secrets:
+    name: authelia_secrets
   authelia_data:
     name: authelia_data
 
@@ -82,14 +84,14 @@ services:
     networks:
       - public_network
 
-  authelia-secrets-generate:
+  secrets-generator:
     image: veerendra2/secrets-generator:latest
-    container_name: authelia-secrets-generate
+    container_name: secrets-generator
     environment:
       PUID: ${PUID:?error}
       PGID: ${PGID:?error}
     volumes:
-      - authelia_data:/secrets
+      - authelia_secrets:/secrets
 
   authelia:
     image: authelia/authelia:latest
@@ -109,19 +111,19 @@ services:
       - traefik.http.routers.authelia.middlewares=authelia@docker
       - traefik.http.services.authelia.loadbalancer.server.port=9091
     depends_on:
-      authelia-secrets-generate:
+      secrets-generator:
         condition: service_completed_successfully
     environment:
       PUID: ${PUID:?error}
       PGID: ${PGID:?error}
       X_AUTHELIA_CONFIG_FILTERS: template
       MY_DOMAIN: ${MY_DOMAIN:?error}
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/JWT_SECRET
-      AUTHELIA_SESSION_SECRET_FILE: /config/SESSION_SECRET
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/STORAGE_ENCRYPTION_KEY
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /var/secrets/JWT_SECRET
+      AUTHELIA_SESSION_SECRET_FILE: /var/secrets/SESSION_SECRET
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /var/secrets/STORAGE_ENCRYPTION_KEY
     volumes:
       - ./config:/config
-      - authelia_data:/config
+      - authelia_secrets:/var/secrets
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     networks:

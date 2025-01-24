@@ -5,19 +5,20 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
 <p align="center">
     <img src="https://i.ibb.co/xjsHPnb/wireguard-logo-icon-168760.png" alt="WireGuard Logo" width="100"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <img src="https://i.ibb.co/nRDG8QV/1200px-Traefik-logo.png" alt="Traefik Logo" width="80"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <img src="https://i.ibb.co/GTQBtqM/logo-cropped.png" alt="Authelia Logo" width="100"/>
+    <img src="https://i.ibb.co/GTQBtqM/logo-cropped.png" alt="Authelia Logo" width="100"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="https://i.ibb.co/TmPdT0D/watchtower.png" alt="Watchtower Logo" width="100"/>
 </p>
 
 ## Deploy
 
-- Ensure Docker and Docker Compose plugin are installed.
-- Generate password hash for users in Authelia
+1. Ensure Docker and Docker Compose plugin are installed.
+2. Generate password hash for users in Authelia
   ```bash
   docker run --rm authelia/authelia:latest \
   authelia crypto hash generate argon2 \
   --password 'my-password'
   ```
-- Update the Authelia users configuration in [./config/users_database.yml](./config/users_database.yml):
+3. Update the Authelia users configuration in [./config/users_database.yml](./config/users_database.yml):
   ```yaml
   users:
     your-user-name:
@@ -26,7 +27,7 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
       password: "<generated-password-hash>"
       email: "root@localhost"
   ```
-- Obtain your DuckDNS token and export the following environmental variables:
+4. Obtain your DuckDNS token and export the following environmental variables:
 
   ```bash
   export MY_PROVIDER="duckdns"
@@ -38,17 +39,17 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
   docker compose up -d
   ```
 
-- Once the stack is up and running, go to your domain (`${MY_DOMAIN}`), log in with your password, and click register as shown below:
+5. Once the stack is up and running, go to your domain (`${MY_DOMAIN}`), log in with your password, and click register as shown below:
     <p align="center">
     <img src="https://i.ibb.co/P4SMnb9/Screenshot-2024-07-21-at-17-00-46.png" alt="drawing" width="200"/>
     </p>
 
-- After login, click "ADD" and it ask for OTP like below screenshot
+6. After login, click "ADD" and it ask for OTP like below screenshot
     <p align="center">
-      <img src="https://i.ibb.co/T8fXGLY/1.png" alt="drawing" width="200"/>
+      <img src="https://i.ibb.co/T8fXGLY/1.png" alt="drawing" width="500"/>
     </p>
 
-- Retrieve the first 2FA code by running `config/notification.txt`.
+7. Retrieve the first 2FA code at `config/notification.txt`.
 
   **NOTE:** This `config/notification.txt` is automatically created by Authelia. For example:
 
@@ -73,7 +74,7 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
   The following link can be used to revoke the code (this is a logged event): XXXX
   ```
 
-- Register OTP
+8. Finally register the OTP in your favourite OTP App
     <p align="center">
-      <img src="https://i.ibb.co/rmxgzpk/3.png" alt="drawing" width="200"/>
+      <img src="https://i.ibb.co/rmxgzpk/3.png" alt="drawing" width="500"/>
     </p>
