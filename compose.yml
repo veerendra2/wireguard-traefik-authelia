@@ -20,8 +20,6 @@ volumes:
     name: wireguard_data
   authelia_secrets:
     name: authelia_secrets
-  authelia_data:
-    name: authelia_data
 
 services:
   traefik:
@@ -101,7 +99,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
-      - traefik.docker.network=wireguard-traefik-authelia_public
+      - traefik.docker.network=public_network
       - traefik.http.routers.authelia.entryPoints=websecure
       - traefik.http.routers.authelia.tls.certresolver=letsencrypt
       - traefik.http.routers.authelia.rule=Host(`auth.${MY_DOMAIN:?error}`)
