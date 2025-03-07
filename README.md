@@ -85,7 +85,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 2. Click on "DNS" and add subdomains pointing to your server's IP.
 
    <p align="center">
-     <img src="./assets/cloudflare.png" width="500" height="300"/>
+     <img src="./assets/cloudflare.png"/>
    </p>
 
 3. To generate a Cloudflare API token:
@@ -115,13 +115,13 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 1. Once the stack is running, visit `wg.${MY_DOMAIN}`, log in, and register.
 
    <p align="center">
-     <img src="./assets/authelia-login.png" width="500" height="300"/>
+     <img src="./assets/authelia-login.png" width="300" height="300"/>
    </p>
 
 2. After logging in, click "ADD" to set up OTP authentication.
 
    <p align="center">
-     <img src="./assets/add-otp.png" width="500" height="300"/>
+     <img src="./assets/add-otp.png" width="300" height="300"/>
    </p>
 
 3. Retrieve the initial 2FA code from `config/notification.txt`.
@@ -143,7 +143,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 4. Register the OTP in your preferred authenticator app.
 
    <p align="center">
-     <img src="./assets/register-otp.png" width="500" height="300"/>
+     <img src="./assets/register-otp.png" width="300" height="300"/>
    </p>
 
 5. Log in, configure your clients, and verify VPN connectivity via [whoer.net](https://whoer.net/).
