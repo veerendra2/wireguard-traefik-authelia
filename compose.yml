@@ -1,17 +1,11 @@
 ---
 networks:
-  public_network:
-    name: public_network
+  traefik_network:
+    name: traefik_network
   redis_network:
     name: redis_network
   wireguard_network:
     name: wireguard_network
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.8.2.0/24
-          gateway: 10.8.2.1
-          ip_range: 10.8.2.0/24
 
 volumes:
   traefik_data:
@@ -48,10 +42,10 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
-      #- "--entrypoints.websecure.http.tls=true"
-      #- "--entrypoints.websecure.http.tls.certResolver=letsencrypt"
-      # - "--entrypoints.websecure.http.tls.domains[0].main=${MY_DOMAIN}"
-      # - "--entrypoints.websecure.http.tls.domains[0].sans=*.${MY_DOMAIN}"
+      - "--entrypoints.websecure.http.tls=true"
+      - "--entrypoints.websecure.http.tls.certResolver=letsencrypt"
+      - "--entrypoints.websecure.http.tls.domains[0].main=${MY_DOMAIN}"
+      - "--entrypoints.websecure.http.tls.domains[0].sans=*.${MY_DOMAIN}"
       # -------------------------------- PROXY -----------------------------------------
       - "--entryPoints.web.forwardedHeaders.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7"
       - "--entryPoints.web.proxyProtocol.trustedIPs=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7"
@@ -64,7 +58,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
-      - traefik.docker.network=public_network
+      - traefik.docker.network=traefik_network
       - traefik.http.routers.api.tls=true
       - traefik.http.routers.api.entryPoints=websecure
       - traefik.http.routers.api.service=api@internal
@@ -80,16 +74,16 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - traefik_data:/letsencrypt
     networks:
-      - public_network
+      - traefik_network
 
-  secrets-generator:
+  authelia-secrets-generator:
     image: veerendra2/secrets-generator:latest
-    container_name: secrets-generator
+    container_name: authelia_secrets_generator
     environment:
-      PUID: ${PUID:?error}
-      PGID: ${PGID:?error}
+      PUID: ${PUID}
+      PGID: ${PGID}
     volumes:
-      - authelia_secrets:/secrets
+      - authelia_data:/secrets
 
   authelia:
     image: authelia/authelia:latest
@@ -97,36 +91,41 @@ services:
     hostname: authelia
     restart: on-failure:3
     labels:
-      - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
-      - traefik.docker.network=public_network
+      - traefik.docker.network=traefik_traefik_network
       - traefik.http.routers.authelia.entryPoints=websecure
       - traefik.http.routers.authelia.tls.certresolver=letsencrypt
       - traefik.http.routers.authelia.rule=Host(`auth.${MY_DOMAIN:?error}`)
+      - traefik.http.routers.authelia.middlewares=authelia@docker
       - traefik.http.middlewares.authelia.forwardAuth.address=http://authelia:9091/api/authz/forward-auth
       - traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader=true
       - traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Email,Remote-Name
-      - traefik.http.routers.authelia.middlewares=authelia@docker
       - traefik.http.services.authelia.loadbalancer.server.port=9091
     depends_on:
-      secrets-generator:
+      authelia-secrets-generator:
         condition: service_completed_successfully
     environment:
-      PUID: ${PUID:?error}
-      PGID: ${PGID:?error}
+      PUID: ${PUID}
+      PGID: ${PGID}
       X_AUTHELIA_CONFIG_FILTERS: template
       MY_DOMAIN: ${MY_DOMAIN:?error}
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /var/secrets/JWT_SECRET
-      AUTHELIA_SESSION_SECRET_FILE: /var/secrets/SESSION_SECRET
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /var/secrets/STORAGE_ENCRYPTION_KEY
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/JWT_SECRET
+      AUTHELIA_SESSION_SECRET_FILE: /config/SESSION_SECRET
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/STORAGE_ENCRYPTION_KEY
+    configs:
+      - source: users_database.yml
+        target: /config/users_database.yml
+        mode: "0444"
+      - source: configuration.yml
+        target: /config/configuration.yml
+        mode: "0444"
+    networks:
+      - traefik_network
+      - redis_network
     volumes:
-      - ./config:/config
-      - authelia_secrets:/var/secrets
+      - authelia_data:/config
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-    networks:
-      - public_network
-      - redis_network
 
   wg-easy:
     image: ghcr.io/wg-easy/wg-easy:latest
@@ -148,19 +147,23 @@ services:
       - traefik
     environment:
       LANG: en
-      WG_HOST: wg.${MY_DOMAIN:?error}
-      WG_DEFAULT_DNS: 1.1.1.1,1.0.0.1
-      WG_DEFAULT_ADDRESS: 10.8.0.x
-      WG_PORT: 51820
-      WG_PERSISTENT_KEEPALIVE: 25
-      WG_ALLOWED_IPS: "0.0.0.0/0,::/0"
-      UI_TRAFFIC_STATS: true
       UI_CHART_TYPE: 2
+      UI_ENABLE_SORT_CLIENTS: true
+      UI_TRAFFIC_STATS: true
+      WG_ALLOWED_IPS: "0.0.0.0/0, ::/0"
+      WG_DEFAULT_ADDRESS: 10.8.0.x
+      WG_DEFAULT_DNS: 1.1.1.1,1.0.0.1
+      WG_ENABLE_EXPIRES_TIME: true
+      WG_ENABLE_ONE_TIME_LINKS: true
+      WG_HOST: wg.${MY_DOMAIN:?error}
+      WG_PERSISTENT_KEEPALIVE: 25
+      WG_PORT: 51820
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - wireguard_data:/etc/wireguard
     ports:
       - "51820:51820/udp"
+      - "51821:51821/tcp"
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -169,8 +172,7 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
     networks:
       wireguard_network:
-        ipv4_address: 10.8.2.8
-      public_network:
+      traefik_network:
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -186,7 +188,6 @@ services:
     environment:
       WATCHTOWER_CLEANUP: true
       WATCHTOWER_LABEL_ENABLE: true
-      WATCHTOWER_RUN_ONCE: true
       WATCHTOWER_HTTP_API_METRICS: true
       WATCHTOWER_ROLLING_RESTART: true
       WATCHTOWER_TIMEOUT: 30s
