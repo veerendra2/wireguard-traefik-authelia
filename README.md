@@ -103,7 +103,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
    ```bash
    export MY_PROVIDER="cloudflare"
    export MY_DOMAIN="mysubdomain.mydomain.com"
-   export CLOUDFLARE_TOKEN="MY_CLOUDFLARE_TOKEN"
+   export CLOUDFLARE_DNS_API_TOKEN="MY_CLOUDFLARE_TOKEN"
    export PUID=$(id -u)
    export PGID=$(id -g)
 
@@ -121,7 +121,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 2. After logging in, click "ADD" to set up OTP authentication.
 
    <p align="center">
-     <img src="./assets/add-otp.png" width="300" height="300"/>
+     <img src="./assets/add-otp.png" width="600" height="300"/>
    </p>
 
 3. Retrieve the initial 2FA code from `config/notification.txt`.
