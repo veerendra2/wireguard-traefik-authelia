@@ -6,14 +6,17 @@ networks:
     name: redis_network
   wireguard_network:
     name: wireguard_network
+    driver: bridge
 
 volumes:
   traefik_data:
     name: traefik_data
   wireguard_data:
     name: wireguard_data
-  authelia_secrets:
-    name: authelia_secrets
+  authelia_data:
+    name: authelia_data
+  redis_data:
+    name: redis_data
 
 services:
   traefik:
@@ -65,7 +68,8 @@ services:
       - traefik.http.routers.api.tls.certresolver=letsencrypt
       - traefik.http.routers.api.rule=Host(`${MY_DOMAIN:?error}`)
     environment:
-      DUCKDNS_TOKEN: "${DUCKDNS_TOKEN:?error}"
+      DUCKDNS_TOKEN: "${DUCKDNS_TOKEN}"
+      CLOUDFLARE_DNS_API_TOKEN: "${CLOUDFLARE_DNS_API_TOKEN}"
     ports:
       - 80:80/tcp
       - 443:443/tcp
@@ -92,7 +96,7 @@ services:
     restart: on-failure:3
     labels:
       - traefik.enable=true
-      - traefik.docker.network=traefik_traefik_network
+      - traefik.docker.network=traefik_network
       - traefik.http.routers.authelia.entryPoints=websecure
       - traefik.http.routers.authelia.tls.certresolver=letsencrypt
       - traefik.http.routers.authelia.rule=Host(`auth.${MY_DOMAIN:?error}`)
@@ -109,21 +113,15 @@ services:
       PGID: ${PGID}
       X_AUTHELIA_CONFIG_FILTERS: template
       MY_DOMAIN: ${MY_DOMAIN:?error}
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/JWT_SECRET
-      AUTHELIA_SESSION_SECRET_FILE: /config/SESSION_SECRET
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/STORAGE_ENCRYPTION_KEY
-    configs:
-      - source: users_database.yml
-        target: /config/users_database.yml
-        mode: "0444"
-      - source: configuration.yml
-        target: /config/configuration.yml
-        mode: "0444"
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /opt/JWT_SECRET
+      AUTHELIA_SESSION_SECRET_FILE: /opt/SESSION_SECRET
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /opt/STORAGE_ENCRYPTION_KEY
     networks:
       - traefik_network
       - redis_network
     volumes:
-      - authelia_data:/config
+      - authelia_data:/opt
+      - ./config:/config
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -135,7 +133,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
-      - traefik.docker.network=wireguard_network
+      - traefik.docker.network=traefik_network
       - traefik.http.routers.wg-easy.tls=true
       - traefik.http.routers.wg-easy.entrypoints=websecure
       - traefik.http.routers.wg-easy.tls.certresolver=letsencrypt
@@ -150,7 +148,7 @@ services:
       UI_CHART_TYPE: 2
       UI_ENABLE_SORT_CLIENTS: true
       UI_TRAFFIC_STATS: true
-      WG_ALLOWED_IPS: "0.0.0.0/0, ::/0"
+      WG_ALLOWED_IPS: "0.0.0.0/0,::/0"
       WG_DEFAULT_ADDRESS: 10.8.0.x
       WG_DEFAULT_DNS: 1.1.1.1,1.0.0.1
       WG_ENABLE_EXPIRES_TIME: true
@@ -182,7 +180,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=false
-    user: ${PUID?error}:${PGID?error}
+    user: ${PUID:?error}:${PGID:?error}
     group_add:
       - 999
     environment:
@@ -196,6 +194,15 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
 
+  init-change-ownership:
+    image: busybox:latest
+    command: chown -R ${PUID}:${PGID} /tmp/change-ownership
+    environment:
+      PUID: ${PUID:?error}
+      PGID: ${PGID:?error}
+    volumes:
+      - redis_data:/tmp/change-ownership
+
   redis:
     image: redis:latest
     container_name: redis
@@ -204,5 +211,7 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
     user: ${PUID:?error}:${PGID:?error}
+    volumes:
+      - redis_data:/data
     networks:
       - redis_network

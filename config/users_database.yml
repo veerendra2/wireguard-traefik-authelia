@@ -8,7 +8,7 @@
 
 users:
   default:
-    disabled: true
+    disabled: false
     displayname: "Default User"
-    password: "$argon2id$v=19$m=65536,t=3,p=4$lSP0ec0uIIswnMSQZYRCkQ$70o3Vw5F2MwojnPvXyAWxK40obuWjGFF5EXkU36VagI" # changeme
+    password: "$argon2id$v=19$m=65536,t=3,p=4$4mtkFjXZySFwujuBgmLivQ$ya6+GHw+uCtitbfEjvju31NNZPtQAFSnhtRiGDTmIMA" # changeme
     email: authelia@authelia.com

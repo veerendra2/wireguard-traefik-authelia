@@ -34,7 +34,7 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
 3. Generate a password hash for users in Authelia:
 
    ```bash
-   docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'MY_PASSWORD_HERE'
+   docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'YOUR_PASSWORD'
    ```
 
 4. Update the Authelia users configuration in [`./config/users_database.yml`](./config/users_database.yml):
@@ -82,7 +82,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 #### Cloudflare
 
 1. Log in to [Cloudflare](https://dash.cloudflare.com) and navigate to your domain.
-2. Click on "DNS" and add subdomains pointing to your server's IP.
+2. Click on "DNS" and add below subdomains pointing to your server's IP.
 
    <p align="center">
      <img src="./assets/cloudflare.png"/>
@@ -147,3 +147,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
    </p>
 
 5. Log in, configure your clients, and verify VPN connectivity via [whoer.net](https://whoer.net/).
+
+   <p align="center">
+     <img src="./assets/wg-easy.png"/>
+   </p>
