@@ -73,8 +73,6 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
    export MY_PROVIDER="duckdns"
    export MY_DOMAIN="mydomain.duckdns.org"
    export DUCKDNS_TOKEN="MY_DUCKDNS_TOKEN"
-   export PUID=$(id -u)
-   export PGID=$(id -g)
 
    docker compose up -d
    ```
@@ -82,10 +80,22 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 #### Cloudflare
 
 1. Log in to [Cloudflare](https://dash.cloudflare.com) and navigate to your domain.
-2. Click on "DNS" and add below subdomains pointing to your server's IP.
+2. Click on "DNS" and add the following subdomains as "A" records, pointing to your server's IP address:
+
+   - `wg.<YOUR-SUB-DOMAIN>`
+   - `auth.<YOUR-SUB-DOMAIN>`
+   - `<YOUR-SUB-DOMAIN>`
+
+   For example, if `<YOUR-SUB-DOMAIN>` is `xyz`, the records should be configured as shown below:
 
    <p align="center">
-     <img src="./assets/cloudflare.png"/>
+       <img src="./assets/cloudflare.png"/>
+   </p>
+
+   **Note:** Ensure that Cloudflare proxy is disabled while adding these subdomains, as shown below:
+
+   <p align="center">
+      <img src="./assets/cloudflare-disable-proxy.png"/>
    </p>
 
 3. To generate a Cloudflare API token:
@@ -104,8 +114,6 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
    export MY_PROVIDER="cloudflare"
    export MY_DOMAIN="mysubdomain.mydomain.com"
    export CLOUDFLARE_DNS_API_TOKEN="MY_CLOUDFLARE_TOKEN"
-   export PUID=$(id -u)
-   export PGID=$(id -g)
 
    docker compose up -d
    ```
