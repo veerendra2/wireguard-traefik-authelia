@@ -23,7 +23,7 @@ services:
     image: traefik:latest
     hostname: traefik
     container_name: traefik
-    restart: on-failure:3
+    restart: unless-stopped
     command:
       - "--log.level=INFO"
       - "--api.insecure=false"
@@ -93,7 +93,7 @@ services:
     image: authelia/authelia:latest
     container_name: authelia
     hostname: authelia
-    restart: on-failure:3
+    restart: unless-stopped
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik_network
@@ -129,7 +129,7 @@ services:
     image: ghcr.io/wg-easy/wg-easy:latest
     container_name: wg-easy
     hostname: wg-easy
-    restart: on-failure:3
+    restart: unless-stopped
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
@@ -161,7 +161,6 @@ services:
       - wireguard_data:/etc/wireguard
     ports:
       - "51820:51820/udp"
-      - "51821:51821/tcp"
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -176,7 +175,7 @@ services:
     image: containrrr/watchtower:latest
     container_name: watchtower
     hostname: watchtower
-    restart: on-failure:3
+    restart: unless-stopped
     labels:
       - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=false
@@ -195,7 +194,7 @@ services:
     image: redis:latest
     container_name: redis
     hostname: redis
-    restart: on-failure:3
+    restart: unless-stopped
     labels:
       - com.centurylinklabs.watchtower.enable=true
     volumes:

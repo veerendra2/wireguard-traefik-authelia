@@ -52,7 +52,7 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
    - 80 (TCP)
    - 443 (TCP)
    - 22 (TCP)
-   - 51820 (TCP & UDP)
+   - 51820 (UDP)
 
 ### Deploying the Stack
 
@@ -71,7 +71,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 
    ```bash
    export MY_PROVIDER="duckdns"
-   export MY_DOMAIN="mydomain.duckdns.org"
+   export MY_DOMAIN="YOUR_SUB_DOMAIN.duckdns.org"
    export DUCKDNS_TOKEN="MY_DUCKDNS_TOKEN"
 
    docker compose up -d
@@ -82,11 +82,11 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 1. Log in to [Cloudflare](https://dash.cloudflare.com) and navigate to your domain.
 2. Click on "DNS" and add the following subdomains as "A" records, pointing to your server's IP address:
 
-   - `wg.<YOUR-SUB-DOMAIN>`
-   - `auth.<YOUR-SUB-DOMAIN>`
-   - `<YOUR-SUB-DOMAIN>`
+   - `wg.<YOUR_SUB_DOMAIN>`
+   - `auth.<YOUR_SUB_DOMAIN>`
+   - `<YOUR_SUB_DOMAIN>`
 
-   For example, if `<YOUR-SUB-DOMAIN>` is `xyz`, the records should be configured as shown below:
+   For example, if `<YOUR_SUB_DOMAIN>` is `xyz`, the records should be configured as shown below:
 
    <p align="center">
        <img src="./assets/cloudflare.png"/>
@@ -112,7 +112,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 
    ```bash
    export MY_PROVIDER="cloudflare"
-   export MY_DOMAIN="mysubdomain.mydomain.com"
+   export MY_DOMAIN="YOUR_SUB_DOMAIN.YOUR_DOMAIN_NAME.com"
    export CLOUDFLARE_DNS_API_TOKEN="MY_CLOUDFLARE_TOKEN"
 
    docker compose up -d
