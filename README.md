@@ -34,7 +34,9 @@ Docker Compose stack to deploy a WireGuard VPN server ([wg-easy](https://github.
 3. Generate a password hash for users in Authelia:
 
    ```bash
-   docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'YOUR_PASSWORD'
+   docker run --rm authelia/authelia:latest \
+      authelia crypto hash generate argon2 \
+      --password 'YOUR_PASSWORD'
    ```
 
 4. Update the Authelia users configuration in [`./config/users_database.yml`](./config/users_database.yml):

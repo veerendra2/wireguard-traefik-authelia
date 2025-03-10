@@ -4,9 +4,6 @@ networks:
     name: traefik_network
   redis_network:
     name: redis_network
-  wireguard_network:
-    name: wireguard_network
-    driver: bridge
 
 volumes:
   traefik_data:
@@ -169,7 +166,6 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
     networks:
       wireguard_network:
-      traefik_network:
 
   watchtower:
     image: containrrr/watchtower:latest
