@@ -139,7 +139,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 
 ### Post-Deployment Setup
 
-1. Once the stack is running, visit `wg.${SUB_DOMAIN}.${MY_ROOT_DOMAIN}`, log in, and register.
+1. Once the stack is running, visit `wg.${SUB_DOMAIN}.${MY_ROOT_DOMAIN}` (for DuckDNS, it should be `wg.${SUB_DOMAIN}.duckdns.org`), log in, and register.
 
    <p align="center">
      <img src="./assets/authelia-login.png" width="300" height="300"/>
