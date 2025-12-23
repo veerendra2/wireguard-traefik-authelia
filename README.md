@@ -63,7 +63,17 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 #### DuckDNS
 
 1. Log in to [DuckDNS](https://www.duckdns.org/) and retrieve your token.
-2. Create a subdomain and add your server's IP address.
+2. Create below subdomains and add your server's IP address.
+
+   - `wg.<SUB_DOMAIN>`
+   - `auth.<SUB_DOMAIN>`
+   - `<SUB_DOMAIN>`
+
+   > **Example:** If you pick your `SUB_DOMAIN=my-wireguard-server`, your domains look like:
+   >
+   > - `wg.my-wireguard-server.duckdns.org`
+   > - `auth.my-wireguard-server.duckdns.org`
+   > - `my-wireguard-server.duckdns.org`
 
    <p align="center">
      <img src="./assets/duckdns.png" width="500" height="300"/>
@@ -73,8 +83,8 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 
    ```bash
    export MY_PROVIDER="duckdns"
-   export MY_DOMAIN="YOUR_SUB_DOMAIN.duckdns.org"
-   export DUCKDNS_TOKEN="MY_DUCKDNS_TOKEN"
+   export MY_DOMAIN="<SUB_DOMAIN>.duckdns.org"
+   export DUCKDNS_TOKEN="<MY_DUCKDNS_TOKEN>"
 
    docker compose up -d
    ```
@@ -84,14 +94,20 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 1. Log in to [Cloudflare](https://dash.cloudflare.com) and navigate to your domain.
 2. Click on "DNS" and add the following subdomains as "A" records, pointing to your server's IP address:
 
-   - `wg.<YOUR_SUB_DOMAIN>`
-   - `auth.<YOUR_SUB_DOMAIN>`
-   - `<YOUR_SUB_DOMAIN>`
+   - `wg.<SUB_DOMAIN>`
+   - `auth.<SUB_DOMAIN>`
+   - `<SUB_DOMAIN>`
 
-   For example, if `<YOUR_SUB_DOMAIN>` is `xyz`, the records should be configured as shown below:
+   Created subdomains like shown in below screenshot.
+
+   > **Example:** If `<SUB_DOMAIN>` is `xyz` and your root domain is `example.com`, the DNS records should look like:
+   >
+   > - `wg.xyz.example.com`
+   > - `auth.xyz.example.com`
+   > - `xyz.example.com`
 
    <p align="center">
-       <img src="./assets/cloudflare.png"/>
+      <img src="./assets/cloudflare.png"/>
    </p>
 
    **Note:** Ensure that Cloudflare proxy is disabled while adding these subdomains, as shown below:
@@ -113,16 +129,17 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 4. Export the required environment variables and start the Docker stack:
 
    ```bash
+   export MY_ROOT_DOMAIN=""
    export MY_PROVIDER="cloudflare"
-   export MY_DOMAIN="YOUR_SUB_DOMAIN.YOUR_DOMAIN_NAME.com"
-   export CLOUDFLARE_DNS_API_TOKEN="MY_CLOUDFLARE_TOKEN"
+   export MY_DOMAIN="<SUB_DOMAIN>.${MY_ROOT_DOMAIN}"
+   export CLOUDFLARE_DNS_API_TOKEN="<MY_CLOUDFLARE_TOKEN>"
 
    docker compose up -d
    ```
 
 ### Post-Deployment Setup
 
-1. Once the stack is running, visit `wg.${MY_DOMAIN}`, log in, and register.
+1. Once the stack is running, visit `wg.${SUB_DOMAIN}.${MY_ROOT_DOMAIN}`, log in, and register.
 
    <p align="center">
      <img src="./assets/authelia-login.png" width="300" height="300"/>
