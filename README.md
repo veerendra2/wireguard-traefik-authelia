@@ -98,7 +98,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
    - `auth.<SUB_DOMAIN>`
    - `<SUB_DOMAIN>`
 
-   Created subdomains like shown in below screenshot.
+   The created subdomains should look like the screenshot below.
 
    > **Example:** If `<SUB_DOMAIN>` is `xyz` and your root domain is `example.com`, the DNS records should look like:
    >
@@ -129,7 +129,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 4. Export the required environment variables and start the Docker stack:
 
    ```bash
-   export MY_ROOT_DOMAIN=""
+   export MY_ROOT_DOMAIN="<MY_ROOT_DOMAIN>"
    export MY_PROVIDER="cloudflare"
    export MY_DOMAIN="<SUB_DOMAIN>.${MY_ROOT_DOMAIN}"
    export CLOUDFLARE_DNS_API_TOKEN="<MY_CLOUDFLARE_TOKEN>"
@@ -139,7 +139,7 @@ This setup has been tested with DuckDNS and Cloudflare. It should work with othe
 
 ### Post-Deployment Setup
 
-1. Once the stack is running, visit `wg.${SUB_DOMAIN}.${MY_ROOT_DOMAIN}` (for DuckDNS, it should be `wg.${SUB_DOMAIN}.duckdns.org`), log in, and register.
+1. Once the stack is running, visit `wg.<SUB_DOMAIN>.<MY_ROOT_DOMAIN>` (for DuckDNS, it should be `wg.<SUB_DOMAIN>.duckdns.org`), log in, and register.
 
    <p align="center">
      <img src="./assets/authelia-login.png" width="300" height="300"/>
